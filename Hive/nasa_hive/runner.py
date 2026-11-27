@@ -4,7 +4,7 @@ import shutil
 import tempfile
 from importlib.resources import files as resources
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import unquote
 
 from orchestrator.runner import PipelineRunner, QUERY_NAMES
 from orchestrator.spec import LOG_RE, MONTHS, REQUEST_RE
@@ -52,10 +52,11 @@ class HiveRunner(PipelineRunner):
             opener = gzip.open if source.suffix == ".gz" else open
             with opener(source, "rb") as src, (stage / f"{seq}.log").open("xb") as dest:
                 shutil.copyfileobj(src, dest)
+        # Hive passes LOCATION to Hadoop Path, which escapes the raw path itself.
         if self.cfg.hive_server_stage_dir:
-            location = "file://" + quote(self.cfg.hive_server_stage_dir.rstrip("/") + "/" + stage.name)
+            location = "file://" + self.cfg.hive_server_stage_dir.rstrip("/") + "/" + stage.name
         else:
-            location = stage.as_uri()
+            location = unquote(stage.as_uri())
         self.execute(self.sql("source", location=literal(location)))
         self.execute(self.sql("load"))
         counts = self.execute("""

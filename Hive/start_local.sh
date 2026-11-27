@@ -15,6 +15,7 @@ state=${HIVE_STATE_DIR:-"$HOME/.local/state/nasa-hive"}
 mkdir -p "$state"
 cd "$state"
 state=$(pwd -P)
+xml_state=$(printf '%s' "$state" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')
 export HADOOP_CONF_DIR="$state/hadoop-conf"
 export HIVE_CONF_DIR="$state/hive-conf"
 mkdir -p "$HADOOP_CONF_DIR" "$HIVE_CONF_DIR" "$state/warehouse"
@@ -33,8 +34,8 @@ cat > "$HIVE_CONF_DIR/hive-site.xml" <<XML
   <property><name>hive.server2.enable.doAs</name><value>false</value></property>
   <property><name>hive.execution.engine</name><value>mr</value></property>
   <property><name>mapreduce.framework.name</name><value>local</value></property>
-  <property><name>hive.metastore.warehouse.dir</name><value>file://$state/warehouse</value></property>
-  <property><name>javax.jdo.option.ConnectionURL</name><value>jdbc:derby:$state/metastore_db;create=true</value></property>
+  <property><name>hive.metastore.warehouse.dir</name><value>file://$xml_state/warehouse</value></property>
+  <property><name>javax.jdo.option.ConnectionURL</name><value>jdbc:derby:$xml_state/metastore_db;create=true</value></property>
 </configuration>
 XML
 if [[ ! -d "$state/metastore_db" ]]; then
