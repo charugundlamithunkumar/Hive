@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nasa-hive"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["PyHive==0.7.0", "thrift==0.22.0"]
+
+[tool.setuptools]
+packages = ["nasa_hive"]
+
+[tool.setuptools.package-data]
+nasa_hive = ["sql/*.sql"]

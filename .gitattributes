@@ -1,0 +1,2 @@
+*.sh text eol=lf
+Project/tests/fixtures/*.log -text whitespace=-blank-at-eol

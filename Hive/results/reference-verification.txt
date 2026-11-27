@@ -1,0 +1,13 @@
+Run 3 (hive, batch size 10) vs reference oracle on 1 file(s)...
+records 106 | malformed 10 | batches 11 | Q1 21 rows | Q2 20 rows | Q3 15 rows
+PASS - totals, per-batch counts, Q1, Q2 and Q3 are identical to the reference.
+
+Run 4 (hive, batch size 50000) vs reference oracle on 2 file(s)...
+records 3461613 | malformed 1 | batches 70 | Q1 295 rows | Q2 20 rows | Q3 1369 rows
+PASS - totals, per-batch counts, Q1, Q2 and Q3 are identical to the reference.
+
+Run 5 (hive, batch size 10000) vs reference oracle on 2 file(s)...
+records 3461613 | malformed 1 | batches 347 | Q1 295 rows | Q2 20 rows | Q3 1369 rows
+PASS - totals, per-batch counts, Q1, Q2 and Q3 are identical to the reference.
+
+Full dataset result hash at both batch sizes: 4894698529
