@@ -1,16 +1,23 @@
 """Live Hive check for original byte offsets, split boundaries and logical batches."""
-from pathlib import Path
+import argparse
 import gzip
 import sys
 import tempfile
-
-PROJECT = Path(__file__).resolve().parents[2] / "Project"
-sys.path.insert(0, str(PROJECT))
-from orchestrator.config import load_config
-from orchestrator.runner import PipelineFactory
+from pathlib import Path
 
 
-def main():
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--project-dir", type=Path, default=Path.cwd(),
+                        help="directory of the separate shared CLI (default: current directory)")
+    args = parser.parse_args(argv)
+    project = args.project_dir.resolve()
+    if not (project / "orchestrator" / "runner.py").is_file():
+        parser.error(f"shared CLI not found in {project}. Pass its directory with --project-dir.")
+    sys.path.insert(0, str(project))
+    from orchestrator.config import load_config
+    from orchestrator.runner import PipelineFactory
+
     line = b'h - - [01/Jul/1995:00:00:00 -0400] "GET /caf\xe9\x85 HTTP/1.0" 200'
     # Include the default Hive null marker, NEL inside a path, and a final line without LF.
     contents = [[line + b"\r\n", b"\n", line + b"\n"],

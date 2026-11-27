@@ -29,7 +29,18 @@ The project uses logical batches with global aggregation. Instructor confirmatio
 
 ## Run locally
 
-Use Ubuntu or WSL2 with **Python 3.10+**, **JDK 17**, **Hadoop 3.4.3**, **Hive 4.1.0**, and a **MySQL 8** instance reachable from Ubuntu. This repository includes the Hive backend in `Hive/` and the shared CLI, MySQL schema, and Python reference in `Project/`. Clone it with `git clone https://github.com/charugundlamithunkumar/Hive.git` and enter the clone.
+Use Ubuntu or WSL2 with **Python 3.10+**, **JDK 17**, **Hadoop 3.4.3**, **Hive 4.1.0**, and a **MySQL 8** instance reachable from Ubuntu. The Hive package uses the shared ETL project's pipeline interface and parsing rules. To run it with MySQL reporting, use a separate copy of the shared project with Hive registered in its CLI.
+
+```bash
+git clone https://github.com/charugundlamithunkumar/Hive.git Hive-backend
+```
+
+Set these paths in each terminal used below.
+
+```bash
+export NASA_HIVE_REPO=/absolute/path/to/Hive-backend
+export NASA_ETL_PROJECT=/absolute/path/to/Project
+```
 
 ### 1. Start HiveServer2
 
@@ -43,34 +54,34 @@ curl -fLO "$base/$archive.sha256"
 sha256sum -c "$archive.sha256" && tar -xzf "$archive"
 ```
 
-From the directory that contains `Hive/` and `Project/`, point these variables at your installations and start Hive in a dedicated terminal.
+Point these variables at your installations and start Hive in a dedicated terminal.
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export HADOOP_HOME=/usr/local/hadoop
 export HIVE_HOME=/absolute/path/to/apache-hive-4.1.0-bin
-bash Hive/start_local.sh
+bash "$NASA_HIVE_REPO/Hive/start_local.sh"
 ```
 
 The script starts HiveServer2 on `127.0.0.1:10000` with Derby and Hadoop's local job runner. It stores runtime state under `~/.local/state/nasa-hive`. Set `HIVE_STATE_DIR` to choose a different directory. Set `HIVE_PORT` on both the server and client to change the listening port.
 
 ### 2. Prepare MySQL and install the CLI dependencies
 
-Create an empty `nasa_etl` database in MySQL and give a user access to it. The CLI creates the reporting tables on the first run. In a second terminal, start from the directory containing both project folders.
+Create an empty `nasa_etl` database in MySQL and give a user access to it. The shared CLI creates the reporting tables on the first run. Install the Hive package into the shared project's Python environment in a second terminal.
 
 ```bash
-cd Project
+cd "$NASA_ETL_PROJECT"
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt -e ../Hive
+python -m pip install -r requirements.txt -e "$NASA_HIVE_REPO/Hive"
 cp -n .env.example .env
 ```
 
-Set `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DB`, `MYSQL_USER`, and `MYSQL_PASSWORD` in `Project/.env`. The CLI defaults to Hive on `127.0.0.1:10000`. The Hive server and CLI need access to the same local staging directory. For a shared mount, set `HIVE_STAGE_DIR` on the client and `HIVE_SERVER_STAGE_DIR` to its corresponding absolute server path.
+Set `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DB`, `MYSQL_USER`, and `MYSQL_PASSWORD` in the shared project's `.env`. The CLI defaults to Hive on `127.0.0.1:10000`. The Hive server and CLI need access to the same local staging directory. For a shared mount, set `HIVE_STAGE_DIR` on the client and `HIVE_SERVER_STAGE_DIR` to its corresponding absolute server path.
 
 ### 3. Run and verify the fixture
 
-Run from `Project/`. Use the printed run ID for both reporting and comparison.
+Run from the shared project directory. Use the printed run ID for both reporting and comparison.
 
 ```bash
 python main.py --pipeline hive --batch-size 10 --files tests/fixtures/edge_cases.log
@@ -83,7 +94,7 @@ The fixture produces **106 records**, **10 malformed lines**, and **11 batches**
 
 ### 4. Run both NASA logs
 
-Download the two official archives into `Project/` and keep their original filenames. [NASA HTTP dataset](https://ita.ee.lbl.gov/html/contrib/NASA-HTTP.html) · [July archive](https://ita.ee.lbl.gov/traces/NASA_access_log_Jul95.gz) · [August archive](https://ita.ee.lbl.gov/traces/NASA_access_log_Aug95.gz)
+Download the two official archives into the shared project directory and keep their original filenames. [NASA HTTP dataset](https://ita.ee.lbl.gov/html/contrib/NASA-HTTP.html) · [July archive](https://ita.ee.lbl.gov/traces/NASA_access_log_Jul95.gz) · [August archive](https://ita.ee.lbl.gov/traces/NASA_access_log_Aug95.gz)
 
 ```bash
 python main.py --pipeline hive --batch-size 50000
@@ -92,7 +103,11 @@ python scripts/compare_results.py --run-id "$run_id"
 python reporting/cli_report.py --run-id "$run_id" --batches
 ```
 
-Add `--data-dir /path/to/archives` to both the pipeline and comparison commands when the archives live elsewhere. Run `python ../Hive/tests/check_input_order.py` from `Project/` for the live split-file regression check. It covers duplicate lines, blank lines, Latin-1, mixed line endings, missing bytes, and batches that cross file boundaries.
+Add `--data-dir /path/to/archives` to both the pipeline and comparison commands when the archives live elsewhere. The live split-file regression check covers duplicate lines, blank lines, Latin-1, mixed line endings, missing bytes, and batches that cross file boundaries.
+
+```bash
+python "$NASA_HIVE_REPO/Hive/tests/check_input_order.py" --project-dir "$NASA_ETL_PROJECT"
+```
 
 ## Source and outputs
 

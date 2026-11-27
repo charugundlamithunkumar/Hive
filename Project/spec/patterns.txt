@@ -1,5 +1,0 @@
-# Single source of truth for parsing (implementation_plan.md section 4).
-# Format: NAME=value (value is everything after the first '=').
-# Rendered per engine by the orchestrator - never retype these by hand.
-LOG_RE=^(\S+)\s+\S+\s+\S+\s+\[(0[1-9]|[12]\d|3[01])/([A-Za-z]{3})/(\d{4}):([01]\d|2[0-3]):([0-5]\d):([0-5]\d)\s+([+-]\d{4})\]\s+"(.*)"\s+(\d{3})(?:\s+(\S+))?\s*$
-REQUEST_RE=^\s*(\S*)\s*(\S*)\s*(\S*)

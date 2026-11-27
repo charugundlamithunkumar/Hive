@@ -2,7 +2,7 @@
 
 **Goal.** A user selects Hive in the team's existing CLI, supplies a batch size, and gets the same three MySQL reports as the MongoDB run. Hive performs the parsing, batch assignment, and aggregation. Python starts the work, collects the small result sets, and passes them to the existing MySQL loader.
 
-**Current status.** The sibling `Hive/` package runs through the shared application in `../Project/`. The fixture and full NASA dataset passed the MySQL-backed reference comparison. The full runs at 10,000 and 50,000 records per batch produced the same query results. The tested runtime uses native Ubuntu WSL2 with Hadoop and Java 17. The repeated batch-size experiment and four-backend comparison remain open. [Verified runs and setup](README.md)
+**Current status.** The Hive package runs through the separately maintained team application. The fixture and full NASA dataset passed the MySQL-backed reference comparison. The full runs at 10,000 and 50,000 records per batch produced the same query results. The tested runtime uses native Ubuntu WSL2 with Hadoop and Java 17. The repeated batch-size experiment and four-backend comparison remain open. [Verified runs and setup](../README.md)
 
 ## 1. Bring up Hive and prove the input order
 
@@ -18,7 +18,7 @@ Start with the 106-line fixture. The first milestone is a Hive result showing ea
 
 ## 2. Build one reusable parsed table
 
-Read the shared log and request patterns through the existing spec loader. Apply the log pattern in HiveQL to the staged raw line, then apply the request pattern to its quoted request. Materialize the resulting table once so each timed query reads the same parsed data. Preserve `n`, `batch_id`, and a malformed flag for every input row. [Shared patterns](../Project/spec/patterns.txt) · [Reference parser](../Project/tests/reference_oracle.py)
+Read the log and request patterns through the team project's `orchestrator.spec` module. Apply the log pattern in HiveQL to the staged raw line, then apply the request pattern to its quoted request. Materialize the resulting table once so each timed query reads the same parsed data. Preserve `n`, `batch_id`, and a malformed flag for every input row.
 
 | Fields | Hive behavior to verify |
 |---|---|
@@ -43,7 +43,7 @@ Return the group keys and named metrics exactly as shown. Keep Q2 rows in ranked
 
 ## 4. Connect Hive to the team's CLI
 
-Keep the Hive runner, HiveQL files, and setup instructions in this sibling folder. Package the runner as an importable Python module with its SQL resources. Install it into the shared Python environment for integration. The bundled `Project/` directory includes the Hive registration, connection settings, and CLI. Reuse the existing timer, result loader, and report. [Runner interface](../Project/orchestrator/runner.py) · [CLI](../Project/main.py) · [MySQL loader](../Project/orchestrator/db_loader.py)
+Install the Hive package and its SQL resources into the team project’s Python environment. The team project provides the backend registration, configuration, CLI, timer, MySQL loader, and report. [Integration setup](../README.md#run-locally)
 
 | Runner method | Responsibility |
 |---|---|
@@ -57,7 +57,7 @@ Keep the existing timing boundary from first input read through MySQL result com
 
 ## 5. Verify correctness through the normal entry point
 
-Run these Bash commands from `Project/` after setting up Hive and MySQL. Enter the run ID printed by each execution so the comparison reads that specific Hive run. [Comparison script](../Project/scripts/compare_results.py)
+Run these Bash commands from the shared project directory after setting up Hive and MySQL. Enter the run ID printed by each execution so the comparison reads that specific Hive run.
 
 ```bash
 python main.py --pipeline hive --batch-size 10 --files tests/fixtures/edge_cases.log
